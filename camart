@@ -1,0 +1,104 @@
+#!/usr/bin/env python2
+'''
+Preprocessing for images to lines.
+
+This takes images from the camera, and applies transformations:
+colorspace conversion, blur, Canny edge detection
+
+Then contours are found to turn it into vectors.
+
+(Unfortunately, OpenCV isn't setup with Python3 on Ubuntu 14.04...
+i'll update this asap.)
+
+---
+    Leonerdo: Interactive art drawing robot
+    Copyright (C) 2016  Matthew Bells
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+'''
+
+import cv2
+import numpy as np
+import sys
+
+# relative module
+import video
+
+import gcoder
+
+
+if __name__ == '__main__':
+    print(__doc__)
+
+    try:
+        fn = sys.argv[1]
+    except:
+        fn = 0
+
+    def nothing(*arg):
+        pass
+
+    cv2.namedWindow('edge')
+    cv2.createTrackbar('thrs1', 'edge', 500, 5000, nothing)
+    cv2.createTrackbar('thrs2', 'edge', 500, 5000, nothing)
+
+    cap = video.create_capture(fn)
+    while True:
+        thrs1 = cv2.getTrackbarPos('thrs1', 'edge')
+        thrs2 = cv2.getTrackbarPos('thrs2', 'edge')
+
+        flag, img = cap.read()
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        # http://docs.opencv.org/3.1.0/d4/d13/tutorial_py_filtering.html#gsc.tab=0
+        gray = cv2.blur(gray,(5,5))
+        # http://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html#gsc.tab=0
+        ret,gray = cv2.threshold(gray,200,255,cv2.THRESH_TRUNC)
+        ret,gray = cv2.threshold(gray,55,255,cv2.THRESH_TOZERO)
+
+        # http://docs.opencv.org/3.1.0/da/d22/tutorial_py_canny.html#gsc.tab=0
+        edge = cv2.Canny(gray, thrs1, thrs2, apertureSize=5)
+
+        # http://docs.opencv.org/master/d4/d73/tutorial_py_contours_begin.html#gsc.tab=0    
+        im2, contours, hierarchy = cv2.findContours(edge,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+        vis_e = img.copy()
+
+        # http://opencvpython.blogspot.ca/2012/06/contours-2-brotherhood.html
+        #approx = cv2.approxPolyDP(cnt,0.1*cv2.arcLength(cnt,True),True)
+    
+        cv2.drawContours(vis_e, contours, -1, (0,255,0), 2)
+        #vis_e = np.uint8(vis_e/2.)
+        #vis_e[edge != 0] = (0, 255, 0)
+        #vis_e[edge == 0] = (0, 0, 0)
+        #cv2.imshow('edge', vis_e)
+        cv2.imshow('edge', vis_e)
+
+
+        ch = cv2.waitKey(5) & 0xFF
+        if ch == 32:
+            #print(contours)
+            print("len=", len(contours))
+            cnt=contours[0]
+            print("len=", len(cnt))
+            print(contours[0][:,:,1])
+            #with open('out.txt', 'w') as f:
+            #    f.write(str(contours))
+            g = gcoder.GCoder()
+            g.add_lines(contours)
+            g.write('images/camart.ngc')
+        if ch == 27:
+            break
+
+    cv2.destroyAllWindows()
+
+

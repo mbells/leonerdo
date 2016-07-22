@@ -4,7 +4,6 @@ Hacked up code to draw g-code for Makelangelo.
 It takes paths from OpenCV.
 
 Limitations:
-* size: not settable and almost certainly wrong
 * feed rate not settable
 
 See https://en.wikipedia.org/wiki/G-code
@@ -67,6 +66,10 @@ G00 Z50;
 
 class GCoder:
     contours = []
+    out_t = 32
+    out_r = 32
+    out_b = -32
+    out_l = -32
 
     def __init__(self):
         pass
@@ -74,10 +77,21 @@ class GCoder:
     def add_lines(self, contours):
         self.contours.extend(contours)
 
+    def input_bounds(self, t, r, b, l):
+        self.t = t
+        self.r = r
+        self.b = b
+        self.l = l
+
     def write(self, filename):
         with open(filename, 'w') as f:
             self._write_header(f)
             self._write_lines(f, self.contours)
+
+    def transform(self, x, y):
+        xo = (x-self.l) / (self.r-self.l) * (self.out_r - self.out_l) + self.out_l
+        yo = -((y-self.t) / (self.b-self.t) * (self.out_t - self.out_b) + self.out_b)
+        return xo, yo
 
     def _write_header(self, file):
         # bounds top, bottom, left, right, ??, ??
@@ -96,12 +110,14 @@ class GCoder:
         for shape in contours:
             pa = shape[0]
             point = map(tuple, pa)[0]
+            po = self.transform(point[0], point[1])
             file.write('G00 Z50;\n')
-            print('point=', point)
-            file.write('G00 X{0} Y{1};\n'.format(*point))
+            print('point=', point, 'po=', po)
+            file.write('G00 X{0} Y{1};\n'.format(*po))
             file.write('G00 Z90;\n')
             for pa in shape[1:]:
                 point = map(tuple, pa)[0]
-                print('point=', point)
-                file.write('G00 X{0} Y{1};\n'.format(*point))
+                po = self.transform(point[0], point[1])
+                print('point=', point, 'po=', po)
+                file.write('G00 X{0} Y{1};\n'.format(*po))
 

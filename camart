@@ -36,7 +36,7 @@ import sys
 import video
 
 import gcoder
-
+apply_mask = False
 
 if __name__ == '__main__':
     print(__doc__)
@@ -56,11 +56,15 @@ if __name__ == '__main__':
     cap = video.create_capture(fn)
     width = cap.get(3)
     height = cap.get(4)
+    fgbg = cv2.createBackgroundSubtractorMOG2()
     while True:
         thrs1 = cv2.getTrackbarPos('thrs1', 'edge')
         thrs2 = cv2.getTrackbarPos('thrs2', 'edge')
 
         flag, img = cap.read()
+        if apply_mask:
+            fgmask = fgbg.apply(img)
+            img = cv2.bitwise_and(img, img, mask = fgmask)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         # http://docs.opencv.org/3.1.0/d4/d13/tutorial_py_filtering.html#gsc.tab=0
         gray = cv2.blur(gray,(5,5))
@@ -84,6 +88,8 @@ if __name__ == '__main__':
         #vis_e[edge == 0] = (0, 0, 0)
         #cv2.imshow('edge', vis_e)
         cv2.imshow('edge', vis_e)
+        if apply_mask:
+            cv2.imshow('frame',fgmask)
 
         ch = cv2.waitKey(5) & 0xFF
         if ch == 32:
@@ -100,6 +106,9 @@ if __name__ == '__main__':
             g.write('images/camart.ngc')
         if ch == 27:
             break
+        if ch == 0x62:
+            apply_mask = not apply_mask
+            print("Mask=", apply_mask)
 
     cv2.destroyAllWindows()
 

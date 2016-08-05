@@ -30,6 +30,7 @@ i'll update this asap.)
 
 import cv2
 import numpy as np
+import os.path
 import sys
 
 # relative module
@@ -37,6 +38,13 @@ import video
 
 import gcoder
 apply_mask = False
+
+def unique_filename(filename_pat):
+    for i in range(0, 9999):
+        fname = filename_pat.format(i)
+        if not os.path.isfile(fname):
+            return fname
+    raise Exception('Can\'t find unique name.')
 
 if __name__ == '__main__':
     print(__doc__)
@@ -103,7 +111,7 @@ if __name__ == '__main__':
             g = gcoder.GCoder()
             g.input_bounds(0, width, height, 0)
             g.add_lines(contours)
-            g.write('images/camart.ngc')
+            g.write(unique_filename('images/camart-{:04d}.ngc'))
         if ch == 27:
             break
         if ch == 0x62:

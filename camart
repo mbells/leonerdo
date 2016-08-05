@@ -46,7 +46,8 @@ def unique_filename(filename_pat):
             return fname
     raise Exception('Can\'t find unique name.')
 
-if __name__ == '__main__':
+def main():
+    global apply_mask
     print(__doc__)
 
     try:
@@ -120,4 +121,5 @@ if __name__ == '__main__':
 
     cv2.destroyAllWindows()
 
-
+if __name__ == '__main__':
+    main()

@@ -66,10 +66,10 @@ G00 Z50;
 
 class GCoder:
     contours = []
-    out_t = 32
-    out_r = 32
-    out_b = -32
-    out_l = -32
+    out_t = 65
+    out_r = 65
+    out_b = -65
+    out_l = -65
 
     def __init__(self):
         pass

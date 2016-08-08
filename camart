@@ -62,12 +62,13 @@ def unique_filename(filename_pat):
     for i in range(0, 9999):
         fname = filename_pat.format(i)
         if not os.path.isfile(fname):
-            return fname
-    raise Exception('Can\'t find unique name.')
+            return fname, i
+    raise Exception("Can't find unique name.")
 
 def main():
     global apply_mask
     print(__doc__)
+    mainWindow = 'Leonerdo'
 
     try:
         fn = sys.argv[1]
@@ -77,20 +78,23 @@ def main():
     def nothing(*arg):
         pass
 
-    cv2.namedWindow('edge')
-    cv2.createTrackbar('thrs1', 'edge', 500, 5000, nothing)
-    cv2.createTrackbar('thrs2', 'edge', 500, 5000, nothing)
+    cv2.namedWindow(mainWindow)
+    cv2.createTrackbar('thrs1', mainWindow, 500, 5000, nothing)
+    cv2.createTrackbar('thrs2', mainWindow, 500, 5000, nothing)
 
     cap = video.create_capture(fn)
     width = cap.get(3)
     height = cap.get(4)
     fgbg = cv2.createBackgroundSubtractorMOG2()
     while True:
-        thrs1 = cv2.getTrackbarPos('thrs1', 'edge')
-        thrs2 = cv2.getTrackbarPos('thrs2', 'edge')
+        thrs1 = cv2.getTrackbarPos('thrs1', mainWindow)
+        thrs2 = cv2.getTrackbarPos('thrs2', mainWindow)
 
-        flag, img = cap.read()
+        flag, img_orig = cap.read()
+        img = img_orig
         if apply_mask:
+            # http://docs.opencv.org/master/d1/dc5/tutorial_background_subtraction.html#gsc.tab=0
+            # http://docs.opencv.org/3.1.0/db/d5c/tutorial_py_bg_subtraction.html#gsc.tab=0
             fgmask = fgbg.apply(img)
             img = cv2.bitwise_and(img, img, mask = fgmask)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -115,10 +119,9 @@ def main():
         #vis_e = np.uint8(vis_e/2.)
         #vis_e[edge != 0] = (0, 255, 0)
         #vis_e[edge == 0] = (0, 0, 0)
-        #cv2.imshow('edge', vis_e)
-        cv2.imshow('edge', vis_e)
+        cv2.imshow(mainWindow, vis_e)
         if apply_mask:
-            cv2.imshow('frame',fgmask)
+            cv2.imshow('background mask',fgmask)
 
         ch = cv2.waitKey(5) & 0xFF
         if ch == 32:
@@ -129,10 +132,14 @@ def main():
             print(contours[0][:,:,1])
             #with open('out.txt', 'w') as f:
             #    f.write(str(contours))
+            filename, filenum = unique_filename('images/camart-{:04d}.ngc')
+
+            cv2.imwrite('images/camart-{:04d}.jpg'.format(filenum), img_orig)
+
             g = gcoder.GCoder()
             g.input_bounds(0, width, height, 0)
             g.add_lines(contours)
-            g.write(unique_filename('images/camart-{:04d}.ngc'))
+            g.write(filename)
         if ch == 27:
             break
         if ch == 0x62:

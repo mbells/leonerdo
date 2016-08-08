@@ -29,6 +29,7 @@ i'll update this asap.)
 '''
 
 import cv2
+import math
 import numpy as np
 import os.path
 import sys
@@ -38,6 +39,24 @@ import video
 
 import gcoder
 apply_mask = False
+
+def contour_len(contour):
+    result = 0
+
+    pa = contour[0]
+    pa = map(tuple, pa)[0]
+    for pb in contour[1:]:
+        pb = map(tuple, pb)[0]
+        result += math.sqrt((pb[0]-pa[0])**2 + (pb[1]-pa[1])**2)
+        pa = pb
+    return result
+
+def filter_small_contours(contours):
+    result = []
+    for contour in contours:
+        if contour_len(contour) > 40:
+            result.append(contour)
+    return result
 
 def unique_filename(filename_pat):
     for i in range(0, 9999):
@@ -88,6 +107,7 @@ def main():
         im2, contours, hierarchy = cv2.findContours(edge,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
         vis_e = img.copy()
 
+        contours = filter_small_contours(contours)
         # http://opencvpython.blogspot.ca/2012/06/contours-2-brotherhood.html
         #approx = cv2.approxPolyDP(cnt,0.1*cv2.arcLength(cnt,True),True)
     

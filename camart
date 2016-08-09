@@ -29,7 +29,6 @@ i'll update this asap.)
 '''
 
 import cv2
-import math
 import numpy as np
 import os.path
 import sys
@@ -37,26 +36,12 @@ import sys
 # relative module
 import video
 
+import contour_util
 import gcoder
+import opti
+
 apply_mask = False
 
-def contour_len(contour):
-    result = 0
-
-    pa = contour[0]
-    pa = map(tuple, pa)[0]
-    for pb in contour[1:]:
-        pb = map(tuple, pb)[0]
-        result += math.sqrt((pb[0]-pa[0])**2 + (pb[1]-pa[1])**2)
-        pa = pb
-    return result
-
-def filter_small_contours(contours):
-    result = []
-    for contour in contours:
-        if contour_len(contour) > 40:
-            result.append(contour)
-    return result
 
 def unique_filename(filename_pat):
     for i in range(0, 9999):
@@ -64,6 +49,7 @@ def unique_filename(filename_pat):
         if not os.path.isfile(fname):
             return fname, i
     raise Exception("Can't find unique name.")
+
 
 def main():
     global apply_mask
@@ -111,7 +97,7 @@ def main():
         im2, contours, hierarchy = cv2.findContours(edge,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
         vis_e = img.copy()
 
-        contours = filter_small_contours(contours)
+        contours = opti.filter_small_contours(contours)
         # http://opencvpython.blogspot.ca/2012/06/contours-2-brotherhood.html
         #approx = cv2.approxPolyDP(cnt,0.1*cv2.arcLength(cnt,True),True)
     
@@ -125,24 +111,40 @@ def main():
 
         ch = cv2.waitKey(5) & 0xFF
         if ch == 32:
-            #print(contours)
             print("len=", len(contours))
             cnt=contours[0]
-            print("len=", len(cnt))
-            print(contours[0][:,:,1])
-            #with open('out.txt', 'w') as f:
-            #    f.write(str(contours))
+
             filename, filenum = unique_filename('images/camart-{:04d}.ngc')
 
+            with open('images/camart-{:04d}.txt'.format(filenum), 'w') as f:
+                f.write(str(contours))
+
             cv2.imwrite('images/camart-{:04d}.jpg'.format(filenum), img_orig)
+            #np.savetxt('images/camart-{:04d}.npcontour'.format(filenum), contours[0])
+            contour_util.write_contours('images/camart-{:04d}.contour'.format(filenum), contours)
 
             g = gcoder.GCoder()
             g.input_bounds(0, width, height, 0)
             g.add_lines(contours)
             g.write(filename)
-        if ch == 27:
+
+        if ch == 0x70: # p
+            print('---------------')
+            print('type(contours)', type(contours))
+            print('type(contours[0])', type(contours[0]))
+            print('type(contours[0][0])', type(contours[0][0]))
+
+            print('contours[0].shape', contours[0].shape)
+            print('contours[0][0].shape', contours[0][0].shape)
+
+            print('contours[0].dtype', contours[0].dtype)
+            #print('dir(contours[0])', dir(contours[0]))
+
+            print('contours[0].dumps()', contours[0].dumps())
+
+        if ch == 27: # Esc
             break
-        if ch == 0x62:
+        if ch == 0x62: # b
             apply_mask = not apply_mask
             print("Mask=", apply_mask)
 

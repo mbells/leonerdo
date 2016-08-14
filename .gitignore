@@ -4,3 +4,6 @@ images/
 # These are linked to from the OpenCV samples:
 common.py
 video.py
+
+# These are linked to from the tsp-solver:
+tsp_solver

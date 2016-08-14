@@ -2,6 +2,26 @@
 import numpy as np
 import sys
 
+def moves(contours):
+    result = []
+    prev = contours[0]
+    for contour in contours[1:]:
+        start = prev[-1]
+        end = contour[0]
+        contour = [start, end]
+        result.append(numpy_contour(contour))
+        prev = contour
+    return result
+
+def numpy_contour(contour):
+    #c1 = np.array(contour)
+    npc = np.ndarray(shape=(len(contour), 1, 2), dtype=np.int32, buffer=None)
+    for i in range(len(contour)):
+        npc[i][0][0] = contour[i][0][0]
+        npc[i][0][1] = contour[i][0][1]
+    return npc
+
+
 def read_contours(filename):
     contour = None
     contours=[]
@@ -18,15 +38,6 @@ def read_contours(filename):
                 contour.append(point)
     contours.append(numpy_contour(contour))
     return contours
-
-
-def numpy_contour(contour):
-    #c1 = np.array(contour)
-    npc = np.ndarray(shape=(len(contour), 1, 2), dtype=np.int32, buffer=None)
-    for i in range(len(contour)):
-        npc[i][0][0] = contour[i][0][0]
-        npc[i][0][1] = contour[i][0][1]
-    return npc
 
 
 def write_contours(filename, contours):

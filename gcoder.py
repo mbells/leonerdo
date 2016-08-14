@@ -112,12 +112,12 @@ class GCoder:
             point = map(tuple, pa)[0]
             po = self.transform(point[0], point[1])
             file.write('G00 Z50;\n')
-            print('point=', point, 'po=', po)
+            #print('point=', point, 'po=', po)
             file.write('G00 X{0} Y{1};\n'.format(*po))
             file.write('G00 Z90;\n')
             for pa in shape[1:]:
                 point = map(tuple, pa)[0]
                 po = self.transform(point[0], point[1])
-                print('point=', point, 'po=', po)
+                #print('point=', point, 'po=', po)
                 file.write('G00 X{0} Y{1};\n'.format(*po))
 

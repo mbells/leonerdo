@@ -4,3 +4,5 @@
 OPENCV_ROOT=../opencv
 ln -s ${OPENCV_ROOT}/samples/python/common.py .
 ln -s ${OPENCV_ROOT}/samples/python/video.py .
+
+ln -s ../tsp-solver/tsp_solver/ tsp_solver

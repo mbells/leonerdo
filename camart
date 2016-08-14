@@ -43,6 +43,20 @@ import opti
 apply_mask = False
 
 
+def save(image, contours, contours_opti):
+    height, width = image.shape[:2]
+    filename, filenum = unique_filename('images/camart-{:04d}.ngc')
+
+    cv2.imwrite('images/camart-{:04d}.jpg'.format(filenum), image)
+    contour_util.write_contours('images/camart-{:04d}.contour'.format(filenum), contours)
+    contour_util.write_contours('images/camart-{:04d}.opti.contour'.format(filenum), contours)
+
+    g = gcoder.GCoder()
+    g.input_bounds(0, width, height, 0)
+    g.add_lines(contours_opti)
+    g.write(filename)
+
+
 def unique_filename(filename_pat):
     for i in range(0, 9999):
         fname = filename_pat.format(i)
@@ -99,6 +113,7 @@ def main():
 
         contours = opti.filter_small_contours(contours)
         # http://opencvpython.blogspot.ca/2012/06/contours-2-brotherhood.html
+        #cnt=contours[0]
         #approx = cv2.approxPolyDP(cnt,0.1*cv2.arcLength(cnt,True),True)
     
         cv2.drawContours(vis_e, contours, -1, (0,255,0), 2)
@@ -111,22 +126,15 @@ def main():
 
         ch = cv2.waitKey(5) & 0xFF
         if ch == 32:
-            print("len=", len(contours))
-            cnt=contours[0]
+            contours_opti = opti.tsp(contours)
+            moves_opti = contour_util.moves(contours_opti)
+            save(img_orig, contours, contours_opti)
 
-            filename, filenum = unique_filename('images/camart-{:04d}.ngc')
+            img_saved = img.copy()
+            cv2.drawContours(img_saved, moves_opti, -1, (0,0,255), 1)
+            cv2.drawContours(img_saved, contours_opti, -1, (0,255,0), 2)
+            cv2.imshow('saved', img_saved)
 
-            with open('images/camart-{:04d}.txt'.format(filenum), 'w') as f:
-                f.write(str(contours))
-
-            cv2.imwrite('images/camart-{:04d}.jpg'.format(filenum), img_orig)
-            #np.savetxt('images/camart-{:04d}.npcontour'.format(filenum), contours[0])
-            contour_util.write_contours('images/camart-{:04d}.contour'.format(filenum), contours)
-
-            g = gcoder.GCoder()
-            g.input_bounds(0, width, height, 0)
-            g.add_lines(contours)
-            g.write(filename)
 
         if ch == 0x70: # p
             print('---------------')

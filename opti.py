@@ -97,7 +97,6 @@ def ordered(a, b):
 
 def tsp(contours):
     tsp = tsp_from_contours(contours)
-    print(len(contours))
     m = tsp.get_matrix()
     path = solve_tsp(m)
     return tsp.contours_from_path(path)

@@ -89,8 +89,8 @@ class GCoder:
             self._write_lines(f, self.contours)
 
     def transform(self, x, y):
-        xo = (x-self.l) / (self.r-self.l) * (self.out_r - self.out_l) + self.out_l
-        yo = -((y-self.t) / (self.b-self.t) * (self.out_t - self.out_b) + self.out_b)
+        xo = float(x-self.l) / (self.r-self.l) * (self.out_r - self.out_l) + self.out_l
+        yo = -(float(y-self.t) / (self.b-self.t) * (self.out_t - self.out_b) + self.out_b)
         return xo, yo
 
     def _write_header(self, file):
@@ -109,14 +109,14 @@ class GCoder:
     def _write_lines(self, file, contours):
         for shape in contours:
             pa = shape[0]
-            point = map(tuple, pa)[0]
+            point = pa[0]
             po = self.transform(point[0], point[1])
             file.write('G00 Z50;\n')
             #print('point=', point, 'po=', po)
             file.write('G00 X{0} Y{1};\n'.format(*po))
             file.write('G00 Z90;\n')
             for pa in shape[1:]:
-                point = map(tuple, pa)[0]
+                point = pa[0]
                 po = self.transform(point[0], point[1])
                 #print('point=', point, 'po=', po)
                 file.write('G00 X{0} Y{1};\n'.format(*po))

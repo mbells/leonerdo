@@ -8,7 +8,7 @@ import gcoder
 import opti
 
 import cv2
-import video
+#import video
 
 
 def main():
@@ -17,7 +17,6 @@ def main():
     filenum=int(re.findall(r'-(\d\d\d\d).', filename)[0])
 
     contours = contour_util.read_contours(filename)
-    #print(contours)
 
     contours_opti = opti.tsp(contours)
 
@@ -25,10 +24,9 @@ def main():
     moves_opti = contour_util.moves(contours_opti)
 
     fn = 0
-    cap = video.create_capture(fn)
-    width = cap.get(3)
-    height = cap.get(4)
-    flag, img = cap.read()
+    img = cv2.imread('images/camart-{:04d}.jpg'.format(filenum)) #video.create_capture(fn)
+    width = img.shape[1]
+    height = img.shape[0]
     before = img.copy()
     vis_e = img.copy()
 

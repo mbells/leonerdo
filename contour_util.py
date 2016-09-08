@@ -2,6 +2,14 @@
 import numpy as np
 import sys
 
+
+def array_contour(numpy_contour):
+    ac = []
+    for i in range(len(numpy_contour)):
+        ac.append([[numpy_contour[i][0][0],numpy_contour[i][0][1]]])
+    return ac
+
+
 def moves(contours):
     result = []
     prev = contours[0]
@@ -12,6 +20,7 @@ def moves(contours):
         result.append(numpy_contour(contour))
         prev = contour
     return result
+
 
 def numpy_contour(contour):
     #c1 = np.array(contour)

@@ -7,6 +7,10 @@ import numpy as np
 
 from tsp_solver.greedy_numpy import solve_tsp
 
+import contour_util
+
+RDP_EPSILON = 2
+
 def contour_len(contour):
     result = 0
 
@@ -36,6 +40,47 @@ def reverse(contour):
         npc[i][0][1] = contour[n-i-1][0][1]
     return npc
 
+def _vec2d_dist2(p1, p2):
+    return (p1[0] - p2[0])**2 + (p1[1] - p2[1])**2
+
+def _vec2d_sub(p1, p2):
+    return (p1[0]-p2[0], p1[1]-p2[1])
+
+def _vec2d_mult(p1, p2):
+    return p1[0]*p2[0] + p1[1]*p2[1]
+
+def simplify_rdp(contour, epsilon):
+    return contour_util.numpy_contour(_simplify_rdp_array(contour_util.array_contour(contour), epsilon))
+
+def _simplify_rdp_array(contour, epsilon):
+    '''Does Ramer-Douglas-Peucker simplification of a curve with `epsilon` threshold.
+    `contour` must be a list of Vec objects,
+    all of the same type (either 2d or 3d).
+    See https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm
+    '''
+    if len(contour) <= 2:
+        return contour
+
+    begin, end = contour[0], contour[-1]
+    #distSq = [begin.distSq(curr) -
+    #    ((end - begin) * (curr - begin)) ** 2 /
+    #    begin.distSq(end) for curr in contour[1:-1]]
+    distSq = []
+    for curr in contour[1:-1]:
+        tmp = (
+            _vec2d_dist2(begin[0], curr[0]) - _vec2d_mult(_vec2d_sub(end[0], begin[0]), _vec2d_sub(curr[0], begin[0])) ** 2
+            / _vec2d_dist2(begin[0], end[0]))
+        distSq.append(tmp)
+
+    maxdist = max(distSq)
+    if maxdist < epsilon ** 2:
+        return [begin, end]
+
+    pos = distSq.index(maxdist)
+    return (
+            _simplify_rdp_array(contour[:pos + 2], epsilon) +
+            _simplify_rdp_array(contour[pos + 1:], epsilon)[1:])
+
 class TspGraph:
     def __init__(self, contours, points):
         self.contours = contours
@@ -51,15 +96,18 @@ class TspGraph:
 
             if self.points_adjacent(p1, p2):
                 contour = self.contours[p1/2]
+                contour = simplify_rdp(contour, RDP_EPSILON)
                 if self.is_reversed(p1, p2):
                     contour = reverse(contour)
                 result.append(contour)
             else:
                 if p1 % 2 == 0:
                     contour = self.contours[p1/2]
+                    contour = simplify_rdp(contour, RDP_EPSILON)
                     result.append(contour)
                 if p2 % 2 == 0:
                     contour = self.contours[p2/2]
+                    contour = simplify_rdp(contour, RDP_EPSILON)
                     result.append(contour)
         return result
 

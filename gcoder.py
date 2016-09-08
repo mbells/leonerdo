@@ -28,11 +28,11 @@ See https://en.wikipedia.org/wiki/G-code
 M101 T32.5 B-32.5 L-32.5 R32.5 I1 J-1;
 D1 L1.4840 R1.4840;
 G92 X0.0 Y10.798999786376953;
-M06 T0;
-G00 F3500.0 A20.0;    # feed rate, absolute position??
+M06 T0;               # tool selection (unused)
+G00 F3500.0 A20.0;    # feed rate, A axis position (unused)
 G90;                  # abs positioning
 G00 G90;              # abs positioning
-M06 T0;               # tool selection
+M06 T0;
 G00 F3500.0 A20.0;
 
 G00 Z50;              # pen up
@@ -100,11 +100,11 @@ class GCoder:
         # position register??
         file.write('G92 X0.0 Y10.798999786376953;\n')
         file.write('M06 T0;\n')               # tool selection
-        file.write('G00 F3500.0 A20.0;\n')    # feed rate, absolute position??
+        file.write('G00 F1000.0 A20.0;\n')    # feed rate, A axis position (unused)??
         file.write('G90;\n')                  # abs positioning
         file.write('G00 G90;\n')              # abs positioning
         file.write('M06 T0;\n')               # tool selection??
-        file.write('G00 F3500.0 A20.0;\n')    # feed rate, absolute position??
+        file.write('G00 F1000.0 A20.0;\n')    # feed rate, A axis position (unused)??
         
     def _write_lines(self, file, contours):
         for shape in contours:

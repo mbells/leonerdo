@@ -66,16 +66,28 @@ G00 Z50;
 
 class GCoder:
     contours = []
-    out_t = 65
-    out_r = 65
-    out_b = -65
-    out_l = -65
+    # A4 = 210 x 297
+    out_t = 210/20
+    out_r = 297/20
+    out_b = -210/20
+    out_l = -297/20
+    tool_dia = 63.662 # mm
+    feed_rate = 1000
 
     def __init__(self):
         pass
 
     def add_lines(self, contours):
         self.contours.extend(contours)
+
+    '''
+    Set bounds, in cm.
+    '''
+    def bounds(self, t, r, b, l):
+        self.out_t = t
+        self.out_r = r
+        self.out_b = b
+        self.out_l = l
 
     def input_bounds(self, t, r, b, l):
         self.t = t
@@ -95,16 +107,19 @@ class GCoder:
 
     def _write_header(self, file):
         # bounds top, bottom, left, right, ??, ??
-        file.write('M101 T32.5 B-32.5 L-32.5 R32.5 I1 J-1;\n')
-        file.write('D1 L1.4840 R1.4840;\n')   # tool diameter
+        file.write('M101 T{0:0.1f} B{2:0.1f} L{3:0.1f} R{1:0.1f} I1 J-1;\n'.format(self.out_t, self.out_r, self.out_b, self.out_l))
+        file.write('D1 L{:0.4f} R{:0.4f};\n'.format(self.tool_dia/10, self.tool_dia/10))   # tool diameter, in cm
+
         # position register??
-        file.write('G92 X0.0 Y10.798999786376953;\n')
+        #file.write('G92 X0.0 Y10.798999786376953;\n')
+        file.write('G92 X0.0 Y0.0;\n')
+
         file.write('M06 T0;\n')               # tool selection
-        file.write('G00 F1000.0 A20.0;\n')    # feed rate, A axis position (unused)??
+        file.write('G00 F{:0.1f} A20.0;\n'.format(self.feed_rate))    # feed rate, A axis position (unused)??
         file.write('G90;\n')                  # abs positioning
         file.write('G00 G90;\n')              # abs positioning
         file.write('M06 T0;\n')               # tool selection??
-        file.write('G00 F1000.0 A20.0;\n')    # feed rate, A axis position (unused)??
+        file.write('G00 F{:0.1f} A20.0;\n'.format(self.feed_rate))    # feed rate, A axis position (unused)??
         
     def _write_lines(self, file, contours):
         for shape in contours:

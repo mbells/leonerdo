@@ -8,7 +8,25 @@ import gcoder
 import opti
 
 import cv2
-#import video
+
+def write_gcode(filenum, width, height, contours):
+    g = gcoder.GCoder()
+    g.input_bounds(0, width, height, 0)
+    g.add_lines(contours)
+
+    out_w = 210.0 # A4
+    out_h = out_w / width * height
+    g.bounds(out_h/2, out_w/2, -out_h/2, -out_w/2)
+
+    # Matt's
+    #g.bounds(19, 19, -19, -19)
+    g.tool_dia = 63.662
+    g.write('images/camart-{:04d}.opti-M.ngc'.format(filenum))
+
+    # Neil's
+    #g.bounds(20, 17, -20, -17)
+    g.tool_dia = 20
+    g.write('images/camart-{:04d}.opti-N.ngc'.format(filenum))
 
 
 def main():
@@ -23,8 +41,7 @@ def main():
     moves = contour_util.moves(contours)
     moves_opti = contour_util.moves(contours_opti)
 
-    fn = 0
-    img = cv2.imread('images/camart-{:04d}.jpg'.format(filenum)) #video.create_capture(fn)
+    img = cv2.imread('images/camart-{:04d}.jpg'.format(filenum))
     width = img.shape[1]
     height = img.shape[0]
     before = img.copy()
@@ -32,10 +49,7 @@ def main():
 
     contour_util.write_contours('images/camart-{:04d}.opti.contour'.format(filenum), contours_opti)
 
-    g = gcoder.GCoder()
-    g.input_bounds(0, width, height, 0)
-    g.add_lines(contours_opti)
-    g.write('images/camart-{:04d}.opti.ngc'.format(filenum))
+    write_gcode(filenum, width, height, contours_opti)
 
     while True:
         cv2.drawContours(before, moves, -1, (0,0,255), 1)

@@ -52,7 +52,7 @@ def save(image, contours, contours_opti):
     contour_util.write_contours('images/camart-{:04d}.contour'.format(filenum), contours)
     contour_util.write_contours('images/camart-{:04d}.opti.contour'.format(filenum), contours)
 
-    contouropt.write_gcode(filenum, width, height, contours)
+    contouropt.write_gcode('images/camart-{:04d}'.format(filenum), width, height, contours)
 
 
 def unique_filename(filename_pat):

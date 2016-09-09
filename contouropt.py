@@ -9,7 +9,7 @@ import opti
 
 import cv2
 
-def write_gcode(filenum, width, height, contours):
+def write_gcode(basename, width, height, contours):
     g = gcoder.GCoder()
     g.input_bounds(0, width, height, 0)
     g.add_lines(contours)
@@ -21,35 +21,51 @@ def write_gcode(filenum, width, height, contours):
     # Matt's
     #g.bounds(19, 19, -19, -19)
     g.tool_dia = 63.662
-    g.write('images/camart-{:04d}.opti-M.ngc'.format(filenum))
+    g.write(basename+'.opti-M.ngc')
 
     # Neil's
     #g.bounds(20, 17, -20, -17)
     g.tool_dia = 20
-    g.write('images/camart-{:04d}.opti-N.ngc'.format(filenum))
+    g.write(basename+'.opti-N.ngc')
 
 
 def main():
     mainWindow = 'Leonerdo'
     filename = sys.argv[1]
-    filenum=int(re.findall(r'-(\d\d\d\d).', filename)[0])
 
-    contours = contour_util.read_contours(filename)
+    if 'camart-' in filename:
+        filenum=int(re.findall(r'-(\d\d\d\d).', filename)[0])
+
+    basename = filename[:filename.rfind('.')]
+    if filename.endswith('.contour'):
+        contours = contour_util.read_contours(filename)
+        img = cv2.imread(basename+'.jpg')
+    else:
+        img = cv2.imread(filename)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        gray = cv2.blur(gray,(5,5))
+        ret,gray = cv2.threshold(gray,200,255,cv2.THRESH_TRUNC)
+        ret,gray = cv2.threshold(gray,55,255,cv2.THRESH_TOZERO)
+        thrs1 = 500
+        thrs2 = 500
+        edge = cv2.Canny(gray, thrs1, thrs2, apertureSize=5)
+        im2, contours, hierarchy = cv2.findContours(edge,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+        contours = opti.filter_small_contours(contours)
+
 
     contours_opti = opti.tsp(contours)
 
     moves = contour_util.moves(contours)
     moves_opti = contour_util.moves(contours_opti)
 
-    img = cv2.imread('images/camart-{:04d}.jpg'.format(filenum))
     width = img.shape[1]
     height = img.shape[0]
     before = img.copy()
     vis_e = img.copy()
 
-    contour_util.write_contours('images/camart-{:04d}.opti.contour'.format(filenum), contours_opti)
+    contour_util.write_contours(basename+'.opti.contour', contours_opti)
 
-    write_gcode(filenum, width, height, contours_opti)
+    write_gcode(basename, width, height, contours_opti)
 
     while True:
         cv2.drawContours(before, moves, -1, (0,0,255), 1)
